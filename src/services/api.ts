@@ -59,8 +59,19 @@ export const paymentApi = {
     return data;
   },
 
+  // Get payment by reference
+  getPaymentByReference: async (reference: string): Promise<any> => {
+    const { data } = await apiClient.get(`/payments/${reference}`);
+    return data;
+  },
+
   // Create new payment
-  createPayment: async (paymentData: Partial<Payment>): Promise<Payment> => {
+  createPayment: async (paymentData: {
+    customerId: string;
+    merchantId: string;
+    amount: number;
+    currency: string;
+  }): Promise<any> => {
     const { data } = await apiClient.post('/payments', paymentData);
     return data;
   },
@@ -97,5 +108,7 @@ export const dashboardApi = {
     return data;
   },
 };
+
+export default apiClient;
 
 export default apiClient;

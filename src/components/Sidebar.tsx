@@ -2,6 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   HomeIcon,
   CreditCardIcon,
+  MagnifyingGlassIcon,
+  PlusCircleIcon,
   ChartBarIcon,
   CogIcon,
 } from '@heroicons/react/24/outline';
@@ -12,6 +14,8 @@ const Sidebar = () => {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: HomeIcon },
     { name: 'Payments', href: '/payments', icon: CreditCardIcon },
+    { name: 'Create Payment', href: '/create-payment', icon: PlusCircleIcon },
+    { name: 'Payment Search', href: '/payment-search', icon: MagnifyingGlassIcon },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
     { name: 'Settings', href: '/settings', icon: CogIcon },
   ];

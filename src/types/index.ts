@@ -69,3 +69,32 @@ export interface Transaction {
   status: 'completed' | 'pending' | 'failed';
   time: string;
 }
+
+// Create Payment Types
+export interface CreatePaymentRequest {
+  customerId: string;
+  merchantId: string;
+  amount: number;
+  currency: string;
+}
+
+export interface CreatePaymentResponse {
+  paymentReference: string;
+  status: string;
+  customerId: string;
+  merchantId: string;
+  amount: number;
+  currency: string;
+}
+
+// Payment Search Types
+export interface PaymentSearchResponse {
+  paymentReference: string;
+  amount: number;
+  currency: string;
+  customerId: string;
+  merchantId: string;
+  status: string;
+  failureReason?: string;
+  createdAt?: string;
+}
