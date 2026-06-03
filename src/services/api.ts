@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Payment, PaymentDetails } from '../types';
+import { Payment, PaymentDetails, PaymentListItem } from '../types';
 
 // API Base URL - update this when backend is ready
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
@@ -48,9 +48,13 @@ export const paymentApi = {
     status?: string;
     page?: number;
     limit?: number;
-  }): Promise<Payment[]> => {
+  }): Promise<PaymentListItem[]> => {
     const { data } = await apiClient.get('/payments', { params: filters });
-    return data;
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    return data?.data || data?.items || [];
   },
 
   // Get payment by ID
@@ -108,7 +112,5 @@ export const dashboardApi = {
     return data;
   },
 };
-
-export default apiClient;
 
 export default apiClient;

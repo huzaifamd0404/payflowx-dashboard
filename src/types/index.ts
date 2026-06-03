@@ -1,4 +1,16 @@
 // Payment Types
+export type PaymentStatus = 'SUCCESS' | 'FAILED' | 'PROCESSING' | 'RETRYING';
+
+export interface PaymentListItem {
+  paymentReference: string;
+  customerId: string;
+  merchantId: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  createdAt: string;
+}
+
 export interface Payment {
   id: string;
   customer: string;

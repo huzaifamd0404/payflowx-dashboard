@@ -1,113 +1,72 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
 import {
   FunnelIcon,
   MagnifyingGlassIcon,
-  ArrowDownTrayIcon,
-  } from '@heroicons/react/24/outline';
+  ArrowPathIcon,
+} from '@heroicons/react/24/outline';
+import { paymentApi } from '../services/api';
+import { PaymentListItem, PaymentStatus } from '../types';
+import { formatCurrency, formatDate } from '../utils/helpers';
 
 const Payments = () => {
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | PaymentStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const payments = [
-    {
-      id: 'PAY-2024-001',
-      customer: 'John Doe',
-      email: 'john@example.com',
-      amount: '$1,234.00',
-      status: 'completed',
-      method: 'Credit Card',
-      date: '2024-05-20 10:30 AM',
-    },
-    {
-      id: 'PAY-2024-002',
-      customer: 'Jane Smith',
-      email: 'jane@example.com',
-      amount: '$567.00',
-      status: 'completed',
-      method: 'Debit Card',
-      date: '2024-05-20 10:25 AM',
-    },
-    {
-      id: 'PAY-2024-003',
-      customer: 'Bob Johnson',
-      email: 'bob@example.com',
-      amount: '$890.00',
-      status: 'pending',
-      method: 'Bank Transfer',
-      date: '2024-05-20 10:18 AM',
-    },
-    {
-      id: 'PAY-2024-004',
-      customer: 'Alice Brown',
-      email: 'alice@example.com',
-      amount: '$2,345.00',
-      status: 'completed',
-      method: 'Credit Card',
-      date: '2024-05-20 10:12 AM',
-    },
-    {
-      id: 'PAY-2024-005',
-      customer: 'Charlie Wilson',
-      email: 'charlie@example.com',
-      amount: '$456.00',
-      status: 'failed',
-      method: 'Credit Card',
-      date: '2024-05-20 10:05 AM',
-    },
-    {
-      id: 'PAY-2024-006',
-      customer: 'Diana Prince',
-      email: 'diana@example.com',
-      amount: '$3,210.00',
-      status: 'completed',
-      method: 'Bank Transfer',
-      date: '2024-05-20 09:58 AM',
-    },
-    {
-      id: 'PAY-2024-007',
-      customer: 'Ethan Hunt',
-      email: 'ethan@example.com',
-      amount: '$789.00',
-      status: 'processing',
-      method: 'Debit Card',
-      date: '2024-05-20 09:45 AM',
-    },
-    {
-      id: 'PAY-2024-008',
-      customer: 'Fiona Green',
-      email: 'fiona@example.com',
-      amount: '$1,567.00',
-      status: 'completed',
-      method: 'Credit Card',
-      date: '2024-05-20 09:32 AM',
-    },
-  ];
+  const [payments, setPayments] = useState<PaymentListItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'completed':
+  const loadPayments = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await paymentApi.getPayments();
+      setPayments(data);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          'Failed to fetch payments. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPayments();
+  }, []);
+
+  const getStatusColor = (status: PaymentStatus) => {
+    switch (status) {
+      case 'SUCCESS':
         return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'failed':
+      case 'FAILED':
         return 'bg-red-100 text-red-800';
+      case 'PROCESSING':
+        return 'bg-blue-100 text-blue-800';
+      case 'RETRYING':
+        return 'bg-amber-100 text-amber-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const filteredPayments = payments.filter((payment) => {
-    const matchesStatus = filterStatus === 'all' || payment.status === filterStatus;
-    const matchesSearch =
-      payment.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.email.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  const filteredPayments = useMemo(
+    () =>
+      payments.filter((payment) => {
+        const matchesStatus =
+          filterStatus === 'all' || payment.status === filterStatus;
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          payment.paymentReference.toLowerCase().includes(query) ||
+          payment.customerId.toLowerCase().includes(query) ||
+          payment.merchantId.toLowerCase().includes(query);
+
+        return matchesStatus && matchesSearch;
+      }),
+    [filterStatus, payments, searchQuery]
+  );
 
   return (
     <div className="space-y-6">
@@ -116,12 +75,16 @@ const Payments = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Manage and track all payment transactions
+            Manage and track all payment transactions from the API
           </p>
         </div>
-        <button className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700">
-          <ArrowDownTrayIcon className="h-5 w-5" />
-          Export
+        <button
+          onClick={loadPayments}
+          disabled={loading}
+          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          <ArrowPathIcon className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
         </button>
       </div>
 
@@ -148,10 +111,10 @@ const Payments = () => {
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="all">All Status</option>
-                        <option value="completed">Completed</option>
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="failed">Failed</option>
+            <option value="SUCCESS">SUCCESS</option>
+            <option value="FAILED">FAILED</option>
+            <option value="PROCESSING">PROCESSING</option>
+            <option value="RETRYING">RETRYING</option>
           </select>
         </div>
       </div>
@@ -159,51 +122,63 @@ const Payments = () => {
       {/* Payments Table */}
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-                      <table className="w-full">
+          <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Payment ID
+                    Payment Reference
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Customer
+                    Customer ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Merchant ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Method
+                    Currency
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Actions
+                    Created Date
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
+                {!loading && filteredPayments.length === 0 && (
+                  <tr>
+                    <td className="px-6 py-8 text-center text-sm text-gray-500" colSpan={7}>
+                      No payments found.
+                    </td>
+                  </tr>
+                )}
+                {loading && (
+                  <tr>
+                    <td className="px-6 py-8 text-center text-sm text-gray-500" colSpan={7}>
+                      Loading payments...
+                    </td>
+                  </tr>
+                )}
                 {filteredPayments.map((payment) => (
-                    <tr key={payment.id} className="hover:bg-gray-50">
+                    <tr key={payment.paymentReference} className="hover:bg-gray-50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                        {payment.id}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {payment.customer}
-                      </div>
-                      <div className="text-gray-500">{payment.email}</div>
-                    </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-900">
-                        {payment.amount}
+                        {payment.paymentReference}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                        {payment.method}
+                        {payment.customerId}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                        {payment.merchantId}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-900">
+                        {formatCurrency(payment.amount, payment.currency)}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                        {payment.currency}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         <span
@@ -215,21 +190,19 @@ const Payments = () => {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                        {payment.date}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm">
-                        <Link
-                          to={`/payments/${payment.id}`}
-                          className="text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          View Details
-                        </Link>
+                        {formatDate(payment.createdAt, true)}
                       </td>
                     </tr>
                   ))}
               </tbody>
             </table>
-                  </div>
+        </div>
+
+        {error && (
+          <div className="border-t border-red-200 bg-red-50 px-6 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
