@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
   MagnifyingGlassIcon,
   ExclamationCircleIcon,
@@ -63,7 +64,9 @@ const PaymentSearch = () => {
     e.preventDefault();
     
     if (!searchQuery.trim()) {
-      setError('Please enter a payment reference');
+      const errorMsg = 'Please enter a payment reference';
+      setError(errorMsg);
+      toast.warning(errorMsg, { autoClose: 3000 });
       return;
     }
 
@@ -74,16 +77,19 @@ const PaymentSearch = () => {
     try {
       const result = await paymentApi.getPaymentByReference(searchQuery.trim());
       setPaymentData(result as PaymentData);
+      toast.success('Payment found successfully!', { autoClose: 3000 });
     } catch (err: any) {
+      let errorMsg = '';
       if (err.response?.status === 404) {
-        setError('Payment not found. Please check the payment reference and try again.');
+        errorMsg = 'Payment not found. Please check the payment reference and try again.';
       } else {
-        setError(
+        errorMsg =
           err.response?.data?.message ||
-            err.message ||
-            'Failed to fetch payment details. Please try again.'
-        );
+          err.message ||
+          'Failed to fetch payment details. Please try again.';
       }
+      setError(errorMsg);
+      toast.error(errorMsg, { autoClose: 4000 });
     } finally {
       setLoading(false);
     }

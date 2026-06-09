@@ -1,3 +1,5 @@
+import type { ComponentType, SVGProps } from 'react';
+
 // Payment Types
 export type PaymentStatus = 'SUCCESS' | 'FAILED' | 'PROCESSING' | 'RETRYING';
 
@@ -21,7 +23,7 @@ export interface Payment {
   date: string;
 }
 
-export interface PaymentDetails extends Payment {
+export interface PaymentDetails extends Omit<Payment, 'customer'> {
   currency: string;
   customer: CustomerInfo;
   paymentMethod: PaymentMethodInfo;
@@ -71,7 +73,7 @@ export interface DashboardStats {
   value: string;
   change: string;
   trend: 'up' | 'down';
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
 export interface Transaction {

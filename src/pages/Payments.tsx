@@ -1,41 +1,89 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   FunnelIcon,
   MagnifyingGlassIcon,
-  ArrowPathIcon,
-} from '@heroicons/react/24/outline';
-import { paymentApi } from '../services/api';
-import { PaymentListItem, PaymentStatus } from '../types';
-import { formatCurrency, formatDate } from '../utils/helpers';
+  ArrowDownTrayIcon,
+  } from '@heroicons/react/24/outline';
 
 const Payments = () => {
   const [filterStatus, setFilterStatus] = useState<'all' | PaymentStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [payments, setPayments] = useState<PaymentListItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadPayments = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await paymentApi.getPayments();
-      setPayments(data);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          'Failed to fetch payments. Please try again.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPayments();
-  }, []);
+  
+  const payments = [
+    {
+      id: 'PAY-2024-001',
+      customer: 'John Doe',
+      email: 'john@example.com',
+      amount: '$1,234.00',
+      status: 'completed',
+      method: 'Credit Card',
+      date: '2024-05-20 10:30 AM',
+    },
+    {
+      id: 'PAY-2024-002',
+      customer: 'Jane Smith',
+      email: 'jane@example.com',
+      amount: '$567.00',
+      status: 'completed',
+      method: 'Debit Card',
+      date: '2024-05-20 10:25 AM',
+    },
+    {
+      id: 'PAY-2024-003',
+      customer: 'Bob Johnson',
+      email: 'bob@example.com',
+      amount: '$890.00',
+      status: 'pending',
+      method: 'Bank Transfer',
+      date: '2024-05-20 10:18 AM',
+    },
+    {
+      id: 'PAY-2024-004',
+      customer: 'Alice Brown',
+      email: 'alice@example.com',
+      amount: '$2,345.00',
+      status: 'completed',
+      method: 'Credit Card',
+      date: '2024-05-20 10:12 AM',
+    },
+    {
+      id: 'PAY-2024-005',
+      customer: 'Charlie Wilson',
+      email: 'charlie@example.com',
+      amount: '$456.00',
+      status: 'failed',
+      method: 'Credit Card',
+      date: '2024-05-20 10:05 AM',
+    },
+    {
+      id: 'PAY-2024-006',
+      customer: 'Diana Prince',
+      email: 'diana@example.com',
+      amount: '$3,210.00',
+      status: 'completed',
+      method: 'Bank Transfer',
+      date: '2024-05-20 09:58 AM',
+    },
+    {
+      id: 'PAY-2024-007',
+      customer: 'Ethan Hunt',
+      email: 'ethan@example.com',
+      amount: '$789.00',
+      status: 'processing',
+      method: 'Debit Card',
+      date: '2024-05-20 09:45 AM',
+    },
+    {
+      id: 'PAY-2024-008',
+      customer: 'Fiona Green',
+      email: 'fiona@example.com',
+      amount: '$1,567.00',
+      status: 'completed',
+      method: 'Credit Card',
+      date: '2024-05-20 09:32 AM',
+    },
+  ];
 
   const getStatusColor = (status: PaymentStatus) => {
     switch (status) {
@@ -107,7 +155,7 @@ const Payments = () => {
           <FunnelIcon className="h-5 w-5 text-gray-400" />
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            onChange={(e) => setFilterStatus(e.target.value as 'all' | PaymentStatus)}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="all">All Status</option>
@@ -149,20 +197,6 @@ const Payments = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {!loading && filteredPayments.length === 0 && (
-                  <tr>
-                    <td className="px-6 py-8 text-center text-sm text-gray-500" colSpan={7}>
-                      No payments found.
-                    </td>
-                  </tr>
-                )}
-                {loading && (
-                  <tr>
-                    <td className="px-6 py-8 text-center text-sm text-gray-500" colSpan={7}>
-                      Loading payments...
-                    </td>
-                  </tr>
-                )}
                 {filteredPayments.map((payment) => (
                     <tr key={payment.paymentReference} className="hover:bg-gray-50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">

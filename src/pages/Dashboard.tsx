@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
@@ -5,9 +7,29 @@ import {
   ClockIcon,
   CheckCircleIcon,
   XCircleIcon,
+  ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 
 const Dashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Simulate initial data load
+  useEffect(() => {
+    try {
+      setLoading(true);
+      // Simulate API call
+      setTimeout(() => {
+        setLoading(false);
+        toast.success('Dashboard loaded successfully!', { autoClose: 2000 });
+      }, 1000);
+    } catch (err: any) {
+      setError('Failed to load dashboard data');
+      toast.error('Failed to load dashboard data', { autoClose: 3000 });
+      setLoading(false);
+    }
+  }, []);
+
   const stats = [
     {
       name: 'Total Revenue',
@@ -90,6 +112,30 @@ const Dashboard = () => {
     }
   };
 
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="flex items-start gap-3">
+            <ExclamationCircleIcon className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-semibold text-red-900 mb-1">
+                Error Loading Dashboard
+              </h3>
+              <p className="text-sm text-red-700">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-3 inline-flex rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -100,7 +146,29 @@ const Dashboard = () => {
         </p>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="animate-pulse rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <div className="h-12 w-12 rounded-lg bg-gray-200"></div>
+                <div className="h-6 w-12 rounded bg-gray-200"></div>
+              </div>
+              <div className="mt-4 space-y-2">
+                <div className="h-4 w-20 rounded bg-gray-200"></div>
+                <div className="h-8 w-32 rounded bg-gray-200"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Stats Grid */}
+      {!loading && (
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <div
@@ -131,6 +199,7 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
+      )}
 
       {/* Recent Transactions */}
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -161,7 +230,17 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {recentTransactions.map((transaction) => (
+              {recentTransactions.length === 0 ? (
+                <tr>
+                  <td className="px-6 py-12 text-center" colSpan={5}>
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <ClockIcon className="h-10 w-10 text-gray-400" />
+                      <p className="text-sm text-gray-500">No transactions yet</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                recentTransactions.map((transaction) => (
                 <tr key={transaction.id} className="hover:bg-gray-50">
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                     {transaction.id}
@@ -185,7 +264,8 @@ const Dashboard = () => {
                     {transaction.time}
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </div>

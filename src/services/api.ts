@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Payment, PaymentDetails, PaymentListItem } from '../types';
+import type { Payment, PaymentDetails, PaymentListItem } from '../types';
 
 // API Base URL - update this when backend is ready
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
