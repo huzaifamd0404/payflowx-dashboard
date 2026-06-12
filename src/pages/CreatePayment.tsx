@@ -7,7 +7,6 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { paymentApi } from '../services/api';
-import type { CreatePaymentResponse } from '../types';
 
 interface FormData {
   customerId: string;
@@ -23,6 +22,15 @@ interface FormErrors {
   currency?: string;
 }
 
+interface PaymentResponse {
+  paymentReference: string;
+  status: string;
+  customerId: string;
+  merchantId: string;
+  amount: number;
+  currency: string;
+}
+
 const CreatePayment = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
@@ -33,7 +41,7 @@ const CreatePayment = () => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
-  const [response, setResponse] = useState<CreatePaymentResponse | null>(null);
+  const [response, setResponse] = useState<PaymentResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const currencies = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD'];
@@ -102,7 +110,7 @@ const CreatePayment = () => {
       };
 
       const result = await paymentApi.createPayment(payload);
-      setResponse(result as CreatePaymentResponse);
+      setResponse(result as PaymentResponse);
       
       // Reset form
       setFormData({
@@ -332,10 +340,10 @@ const CreatePayment = () => {
                   <CheckCircleIcon className="h-6 w-6 text-green-600" />
                   <div>
                     <h3 className="text-sm font-semibold text-green-900">
-                      Payment Accepted
+                      Payment Created Successfully
                     </h3>
                     <p className="text-xs text-green-700 mt-0.5">
-                      Request was accepted and is being processed in the background
+                      Your payment has been initiated
                     </p>
                   </div>
                 </div>
@@ -365,12 +373,30 @@ const CreatePayment = () => {
 
                   <div className="rounded-lg bg-gray-50 p-4">
                     <dt className="text-xs font-medium text-gray-500 mb-1">
-                      Next Step
+                      Amount
                     </dt>
                     <dd className="text-sm font-semibold text-gray-900">
-                      Check status using this reference
+                      {response.amount} {response.currency}
                     </dd>
                   </div>
+                </div>
+
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <dt className="text-xs font-medium text-gray-500 mb-1">
+                    Customer ID
+                  </dt>
+                  <dd className="text-sm font-medium text-gray-900">
+                    {response.customerId}
+                  </dd>
+                </div>
+
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <dt className="text-xs font-medium text-gray-500 mb-1">
+                    Merchant ID
+                  </dt>
+                  <dd className="text-sm font-medium text-gray-900">
+                    {response.merchantId}
+                  </dd>
                 </div>
               </div>
 

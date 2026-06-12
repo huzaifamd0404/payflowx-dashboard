@@ -95,6 +95,10 @@ export interface CreatePaymentRequest {
 export interface CreatePaymentResponse {
   paymentReference: string;
   status: string;
+  customerId: string;
+  merchantId: string;
+  amount: number;
+  currency: string;
 }
 
 // Payment Search Types

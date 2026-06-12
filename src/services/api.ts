@@ -1,12 +1,5 @@
 import axios from 'axios';
-import type {
-  CreatePaymentRequest,
-  CreatePaymentResponse,
-  Payment,
-  PaymentDetails,
-  PaymentListItem,
-  PaymentSearchResponse,
-} from '../types';
+import type { Payment, PaymentDetails, PaymentListItem } from '../types';
 
 // API Base URL - update this when backend is ready
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
@@ -19,44 +12,6 @@ const apiClient = axios.create({
   },
   timeout: 10000, // 10 seconds
 });
-
-const mockPaymentsStore = new Map<string, PaymentSearchResponse>();
-
-const generatePaymentReference = (): string => {
-  const random = Math.floor(10000 + Math.random() * 90000);
-  return `PAY${random}`;
-};
-
-const normalizeAcceptedPaymentResponse = (
-  data: any,
-  fallbackReference?: string
-): CreatePaymentResponse => {
-  const paymentReference =
-    data?.paymentReference || data?.reference || fallbackReference || generatePaymentReference();
-
-  return {
-    paymentReference,
-    status: 'PROCESSING',
-  };
-};
-
-const scheduleMockBackgroundProcessing = (paymentReference: string): void => {
-  const processingDelayMs = Math.floor(3000 + Math.random() * 4000);
-
-  setTimeout(() => {
-    const existing = mockPaymentsStore.get(paymentReference);
-    if (!existing || existing.status !== 'PROCESSING') {
-      return;
-    }
-
-    const isSuccess = Math.random() < 0.85;
-    mockPaymentsStore.set(paymentReference, {
-      ...existing,
-      status: isSuccess ? 'SUCCESS' : 'FAILED',
-      failureReason: isSuccess ? undefined : 'Transaction declined by issuer',
-    });
-  }, processingDelayMs);
-};
 
 // Request interceptor for adding auth tokens
 apiClient.interceptors.request.use(
@@ -109,63 +64,20 @@ export const paymentApi = {
   },
 
   // Get payment by reference
-  getPaymentByReference: async (reference: string): Promise<PaymentSearchResponse> => {
-    try {
-      const { data } = await apiClient.get(`/payments/${reference}`);
-      return data;
-    } catch (error: any) {
-      if (error?.response?.status === 404 && mockPaymentsStore.has(reference)) {
-        return mockPaymentsStore.get(reference)!;
-      }
-      throw error;
-    }
+  getPaymentByReference: async (reference: string): Promise<any> => {
+    const { data } = await apiClient.get(`/payments/${reference}`);
+    return data;
   },
 
-  // Create new payment with async processing semantics
-  createPayment: async (
-    paymentData: CreatePaymentRequest
-  ): Promise<CreatePaymentResponse> => {
-    try {
-      const { data } = await apiClient.post('/payments', paymentData, {
-        headers: {
-          Prefer: 'respond-async',
-        },
-      });
-
-      const accepted = normalizeAcceptedPaymentResponse(data);
-
-      mockPaymentsStore.set(accepted.paymentReference, {
-        paymentReference: accepted.paymentReference,
-        amount: paymentData.amount,
-        currency: paymentData.currency,
-        customerId: paymentData.customerId,
-        merchantId: paymentData.merchantId,
-        status: accepted.status,
-        createdAt: new Date().toISOString(),
-      });
-
-      scheduleMockBackgroundProcessing(accepted.paymentReference);
-      return accepted;
-    } catch {
-      const paymentReference = generatePaymentReference();
-
-      mockPaymentsStore.set(paymentReference, {
-        paymentReference,
-        amount: paymentData.amount,
-        currency: paymentData.currency,
-        customerId: paymentData.customerId,
-        merchantId: paymentData.merchantId,
-        status: 'PROCESSING',
-        createdAt: new Date().toISOString(),
-      });
-
-      scheduleMockBackgroundProcessing(paymentReference);
-
-      return {
-        paymentReference,
-        status: 'PROCESSING',
-      };
-    }
+  // Create new payment
+  createPayment: async (paymentData: {
+    customerId: string;
+    merchantId: string;
+    amount: number;
+    currency: string;
+  }): Promise<any> => {
+    const { data } = await apiClient.post('/payments', paymentData);
+    return data;
   },
 
   // Update payment status
