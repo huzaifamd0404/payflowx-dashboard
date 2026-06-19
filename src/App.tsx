@@ -25,7 +25,7 @@ function App() {
       </Router>
       <ToastContainer
         position="top-right"
-        autoClose={4000}
+        autoClose={3500}
         hideProgressBar={false}
         newestOnTop={true}
         closeOnClick
@@ -34,6 +34,8 @@ function App() {
         draggable
         pauseOnHover
         theme="light"
+        limit={3}
+        toastClassName="text-sm"
       />
     </>
   );

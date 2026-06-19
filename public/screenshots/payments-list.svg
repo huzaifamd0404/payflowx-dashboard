@@ -1,0 +1,20 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" fill="#F8FAFC"/>
+  <rect width="248" height="900" fill="#111827"/>
+  <rect x="272" y="24" width="1144" height="72" rx="12" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="272" y="120" width="780" height="52" rx="12" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="1068" y="120" width="196" height="52" rx="12" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="1278" y="120" width="138" height="52" rx="12" fill="#2563EB"/>
+  <rect x="272" y="196" width="1144" height="664" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="304" y="236" width="1080" height="1" fill="#E5E7EB"/>
+  <rect x="304" y="292" width="1080" height="1" fill="#E5E7EB"/>
+  <rect x="304" y="348" width="1080" height="1" fill="#E5E7EB"/>
+  <rect x="304" y="404" width="1080" height="1" fill="#E5E7EB"/>
+  <rect x="304" y="460" width="1080" height="1" fill="#E5E7EB"/>
+  <rect x="304" y="516" width="1080" height="1" fill="#E5E7EB"/>
+  <rect x="304" y="572" width="1080" height="1" fill="#E5E7EB"/>
+  <rect x="1156" y="257" width="94" height="22" rx="11" fill="#DCFCE7"/>
+  <rect x="1156" y="313" width="94" height="22" rx="11" fill="#FEE2E2"/>
+  <rect x="1156" y="369" width="94" height="22" rx="11" fill="#DBEAFE"/>
+  <text x="304" y="88" font-family="Segoe UI, Arial, sans-serif" font-size="22" fill="#0F172A" font-weight="700">Payments Table, Filters, and States</text>
+</svg>

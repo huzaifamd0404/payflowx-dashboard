@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCardIcon,
@@ -6,6 +7,7 @@ import {
   CheckCircleIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
+import { toast } from 'react-toastify';
 import { paymentApi } from '../services/api';
 
 interface FormData {
@@ -96,6 +98,9 @@ const CreatePayment = () => {
     setResponse(null);
 
     if (!validateForm()) {
+      toast.warning('Please fix validation errors before submitting.', {
+        autoClose: 3000,
+      });
       return;
     }
 
@@ -111,6 +116,7 @@ const CreatePayment = () => {
 
       const result = await paymentApi.createPayment(payload);
       setResponse(result as PaymentResponse);
+      toast.success('Payment created successfully.', { autoClose: 2500 });
       
       // Reset form
       setFormData({
@@ -119,12 +125,15 @@ const CreatePayment = () => {
         amount: '',
         currency: 'USD',
       });
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
+    } catch (err: unknown) {
+      const errorMessage = axios.isAxiosError(err)
+        ? (err.response?.data?.message as string) ||
           err.message ||
           'Failed to create payment. Please try again.'
-      );
+        : 'Failed to create payment. Please try again.';
+
+      setError(errorMessage);
+      toast.error(errorMessage, { autoClose: 3500 });
     } finally {
       setLoading(false);
     }

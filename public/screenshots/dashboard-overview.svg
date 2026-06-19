@@ -1,0 +1,19 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" fill="#F8FAFC"/>
+  <rect width="248" height="900" fill="#111827"/>
+  <rect x="272" y="24" width="1144" height="72" rx="12" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="304" y="48" width="360" height="24" rx="8" fill="#E5E7EB"/>
+  <circle cx="1336" cy="60" r="18" fill="#DBEAFE"/>
+  <rect x="272" y="120" width="1144" height="92" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="272" y="236" width="268" height="146" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="564" y="236" width="268" height="146" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="856" y="236" width="268" height="146" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="1148" y="236" width="268" height="146" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="272" y="406" width="1144" height="454" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="304" y="442" width="360" height="20" rx="8" fill="#E5E7EB"/>
+  <rect x="304" y="484" width="1080" height="1" fill="#E5E7EB"/>
+  <rect x="304" y="520" width="1040" height="1" fill="#E5E7EB"/>
+  <rect x="304" y="556" width="990" height="1" fill="#E5E7EB"/>
+  <rect x="304" y="592" width="1080" height="1" fill="#E5E7EB"/>
+  <text x="304" y="174" font-family="Segoe UI, Arial, sans-serif" font-size="30" fill="#0F172A" font-weight="700">Dashboard Overview</text>
+</svg>

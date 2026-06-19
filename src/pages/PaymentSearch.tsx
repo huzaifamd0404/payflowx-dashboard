@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
@@ -10,6 +11,7 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { paymentApi } from '../services/api';
+import EmptyState from '../components/ui/EmptyState';
 
 interface PaymentData {
   paymentReference: string;
@@ -78,16 +80,14 @@ const PaymentSearch = () => {
       const result = await paymentApi.getPaymentByReference(searchQuery.trim());
       setPaymentData(result as PaymentData);
       toast.success('Payment found successfully!', { autoClose: 3000 });
-    } catch (err: any) {
-      let errorMsg = '';
-      if (err.response?.status === 404) {
-        errorMsg = 'Payment not found. Please check the payment reference and try again.';
-      } else {
-        errorMsg =
-          err.response?.data?.message ||
-          err.message ||
-          'Failed to fetch payment details. Please try again.';
-      }
+    } catch (err: unknown) {
+      const errorMsg = axios.isAxiosError(err)
+        ? err.response?.status === 404
+          ? 'Payment not found. Please check the payment reference and try again.'
+          : (err.response?.data?.message as string) ||
+            err.message ||
+            'Failed to fetch payment details. Please try again.'
+        : 'Failed to fetch payment details. Please try again.';
       setError(errorMsg);
       toast.error(errorMsg, { autoClose: 4000 });
     } finally {
@@ -317,10 +317,10 @@ const PaymentSearch = () => {
             )}
 
             {/* Actions */}
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 to={`/payments/${paymentData.paymentReference}`}
-                className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-lg bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:flex-1"
               >
                 View Full Details
               </Link>
@@ -337,21 +337,11 @@ const PaymentSearch = () => {
 
       {/* Empty State */}
       {!paymentData && !error && !loading && (
-        <div className="rounded-lg border border-gray-200 bg-white p-12">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="rounded-full bg-gray-100 p-4 mb-4">
-              <MagnifyingGlassIcon className="h-12 w-12 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Search for a Payment
-            </h3>
-            <p className="text-sm text-gray-500 max-w-sm">
-              Enter a payment reference in the search box above to view detailed
-              payment information including status, amount, and failure reasons if
-              applicable.
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          title="Search for a Payment"
+          message="Enter a payment reference above to view status, amount, and failure details if available."
+          icon={MagnifyingGlassIcon}
+        />
       )}
     </div>
   );

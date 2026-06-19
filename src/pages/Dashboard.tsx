@@ -7,27 +7,29 @@ import {
   ClockIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
+import ErrorState from '../components/ui/ErrorState';
+import EmptyState from '../components/ui/EmptyState';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Simulate initial data load
   useEffect(() => {
-    try {
-      setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
+    const timeoutId = window.setTimeout(() => {
+      try {
         setLoading(false);
         toast.success('Dashboard loaded successfully!', { autoClose: 2000 });
-      }, 1000);
-    } catch (err: any) {
-      setError('Failed to load dashboard data');
-      toast.error('Failed to load dashboard data', { autoClose: 3000 });
-      setLoading(false);
-    }
+      } catch {
+        setError('Failed to load dashboard data');
+        toast.error('Failed to load dashboard data', { autoClose: 3000 });
+        setLoading(false);
+      }
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, []);
 
   const stats = [
@@ -115,23 +117,7 @@ const Dashboard = () => {
   if (error) {
     return (
       <div className="space-y-6">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <div className="flex items-start gap-3">
-            <ExclamationCircleIcon className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-semibold text-red-900 mb-1">
-                Error Loading Dashboard
-              </h3>
-              <p className="text-sm text-red-700">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-3 inline-flex rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
-        </div>
+        <ErrorState title="Error Loading Dashboard" message={error} onAction={() => window.location.reload()} />
       </div>
     );
   }
@@ -233,10 +219,11 @@ const Dashboard = () => {
               {recentTransactions.length === 0 ? (
                 <tr>
                   <td className="px-6 py-12 text-center" colSpan={5}>
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <ClockIcon className="h-10 w-10 text-gray-400" />
-                      <p className="text-sm text-gray-500">No transactions yet</p>
-                    </div>
+                    <EmptyState
+                      title="No transactions yet"
+                      message="Recent transactions will appear here once new payments are processed."
+                      icon={ClockIcon}
+                    />
                   </td>
                 </tr>
               ) : (

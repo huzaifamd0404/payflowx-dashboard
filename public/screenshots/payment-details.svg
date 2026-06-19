@@ -1,0 +1,15 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" fill="#F8FAFC"/>
+  <rect width="248" height="900" fill="#111827"/>
+  <rect x="272" y="24" width="1144" height="72" rx="12" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="272" y="120" width="1144" height="92" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="272" y="236" width="740" height="624" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="1036" y="236" width="380" height="292" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="1036" y="552" width="380" height="308" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="304" y="284" width="676" height="116" rx="10" fill="#F9FAFB"/>
+  <rect x="304" y="424" width="676" height="116" rx="10" fill="#F9FAFB"/>
+  <rect x="304" y="564" width="676" height="116" rx="10" fill="#F9FAFB"/>
+  <rect x="1068" y="284" width="316" height="66" rx="10" fill="#F9FAFB"/>
+  <rect x="1068" y="366" width="316" height="66" rx="10" fill="#F9FAFB"/>
+  <text x="304" y="88" font-family="Segoe UI, Arial, sans-serif" font-size="22" fill="#0F172A" font-weight="700">Payment Details and Timeline</text>
+</svg>

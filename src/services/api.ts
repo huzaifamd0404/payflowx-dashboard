@@ -1,5 +1,11 @@
 import axios from 'axios';
-import type { Payment, PaymentDetails, PaymentListItem } from '../types';
+import type {
+  CreatePaymentRequest,
+  CreatePaymentResponse,
+  Payment,
+  PaymentListItem,
+  PaymentSearchResponse,
+} from '../types';
 
 // API Base URL - update this when backend is ready
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
@@ -58,24 +64,21 @@ export const paymentApi = {
   },
 
   // Get payment by ID
-  getPaymentById: async (id: string): Promise<PaymentDetails> => {
+  getPaymentById: async (id: string): Promise<PaymentSearchResponse> => {
     const { data } = await apiClient.get(`/payments/${id}`);
     return data;
   },
 
   // Get payment by reference
-  getPaymentByReference: async (reference: string): Promise<any> => {
+  getPaymentByReference: async (reference: string): Promise<PaymentSearchResponse> => {
     const { data } = await apiClient.get(`/payments/${reference}`);
     return data;
   },
 
   // Create new payment
-  createPayment: async (paymentData: {
-    customerId: string;
-    merchantId: string;
-    amount: number;
-    currency: string;
-  }): Promise<any> => {
+  createPayment: async (
+    paymentData: CreatePaymentRequest
+  ): Promise<CreatePaymentResponse> => {
     const { data } = await apiClient.post('/payments', paymentData);
     return data;
   },

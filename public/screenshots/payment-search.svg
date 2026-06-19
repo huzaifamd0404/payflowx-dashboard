@@ -1,0 +1,15 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" fill="#F8FAFC"/>
+  <rect width="248" height="900" fill="#111827"/>
+  <rect x="272" y="24" width="1144" height="72" rx="12" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="272" y="120" width="1144" height="182" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="304" y="184" width="1080" height="52" rx="10" fill="#F9FAFB" stroke="#D1D5DB"/>
+  <rect x="304" y="252" width="300" height="38" rx="10" fill="#2563EB"/>
+  <rect x="272" y="326" width="1144" height="534" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+  <rect x="304" y="366" width="1080" height="68" rx="10" fill="#F9FAFB"/>
+  <rect x="304" y="456" width="520" height="94" rx="10" fill="#F9FAFB"/>
+  <rect x="864" y="456" width="520" height="94" rx="10" fill="#F9FAFB"/>
+  <rect x="304" y="566" width="520" height="94" rx="10" fill="#F9FAFB"/>
+  <rect x="864" y="566" width="520" height="94" rx="10" fill="#F9FAFB"/>
+  <text x="304" y="88" font-family="Segoe UI, Arial, sans-serif" font-size="22" fill="#0F172A" font-weight="700">Payment Search and Result States</text>
+</svg>

@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
+  XMarkIcon,
   HomeIcon,
   CreditCardIcon,
   MagnifyingGlassIcon,
@@ -8,7 +9,12 @@ import {
   CogIcon,
 } from '@heroicons/react/24/outline';
 
-const Sidebar = () => {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
 
   const navigation = [
@@ -21,10 +27,21 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-gray-900">
+    <aside
+      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-64 flex-col bg-gray-900 transition-transform duration-200 lg:static lg:translate-x-0 ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}
+    >
       {/* Logo */}
-      <div className="flex h-16 items-center justify-center border-b border-gray-800">
+      <div className="flex h-16 items-center justify-between border-b border-gray-800 px-4 lg:justify-center">
         <h1 className="text-2xl font-bold text-white">PayFlowX</h1>
+        <button
+          aria-label="Close navigation menu"
+          className="rounded-lg p-1 text-gray-300 hover:bg-gray-800 hover:text-white lg:hidden"
+          onClick={onClose}
+        >
+          <XMarkIcon className="h-6 w-6" />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -35,6 +52,7 @@ const Sidebar = () => {
             <Link
               key={item.name}
               to={item.href}
+              onClick={onClose}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                 isActive
                   ? 'bg-gray-800 text-white'
@@ -58,7 +76,7 @@ const Sidebar = () => {
           </div>
         </div>
       </div>
-    </div>
+    </aside>
   );
 };
 

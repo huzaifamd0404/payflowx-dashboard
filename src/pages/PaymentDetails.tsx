@@ -1,103 +1,195 @@
-import { useParams, Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import { Link, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
   ArrowLeftIcon,
+  CalendarIcon,
   CheckCircleIcon,
   ClockIcon,
+  CreditCardIcon,
   XCircleIcon,
-  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
+import { paymentApi } from '../services/api';
+import { formatCurrency, formatDate } from '../utils/helpers';
+import ErrorState from '../components/ui/ErrorState';
+import LoadingState from '../components/ui/LoadingState';
+
+interface PaymentDetailData {
+  paymentReference: string;
+  amount: number;
+  currency: string;
+  customerId: string;
+  merchantId: string;
+  status: string;
+  failureReason?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 const PaymentDetails = () => {
   const { id } = useParams();
+  const [payment, setPayment] = useState<PaymentDetailData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock payment data - in real app, fetch based on id
-  const payment = {
-    id: id || 'PAY-2024-001',
-    status: 'completed',
-    amount: '$1,234.00',
-    currency: 'USD',
-    customer: {
-      name: 'John Doe',
-      email: 'john@example.com',
-      phone: '+1 (555) 123-4567',
-      address: '123 Main St, New York, NY 10001',
-    },
-    paymentMethod: {
-      type: 'Credit Card',
-      last4: '4242',
-      brand: 'Visa',
-      expiry: '12/2025',
-    },
-    transaction: {
-      createdAt: '2024-05-20 10:30:15 AM',
-      completedAt: '2024-05-20 10:30:18 AM',
-      processingTime: '3.2s',
-      gateway: 'Stripe',
-      transactionId: 'ch_3NmQp2AbhKzLQj1i0mhLQjZ1',
-    },
-    billing: {
-      subtotal: '$1,200.00',
-      tax: '$24.00',
-      processingFee: '$10.00',
-      total: '$1,234.00',
-    },
-    timeline: [
-      {
-        status: 'Payment Initiated',
-        timestamp: '2024-05-20 10:30:15 AM',
-        description: 'Customer initiated payment',
-      },
-      {
-        status: 'Validation Passed',
-        timestamp: '2024-05-20 10:30:16 AM',
-        description: 'Payment details validated successfully',
-      },
-      {
-        status: 'Processing',
-        timestamp: '2024-05-20 10:30:16 AM',
-        description: 'Payment sent to bank for processing',
-      },
-      {
-        status: 'Completed',
-        timestamp: '2024-05-20 10:30:18 AM',
-        description: 'Payment successfully processed',
-      },
-    ],
-  };
+  const loadPayment = async () => {
+    if (!id) {
+      setError('Invalid payment reference.');
+      setLoading(false);
+      return;
+    }
 
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return <CheckCircleIcon className="h-6 w-6 text-green-600" />;
-      case 'pending':
-        return <ClockIcon className="h-6 w-6 text-yellow-600" />;
-      case 'processing':
-        return <ArrowPathIcon className="h-6 w-6 text-blue-600 animate-spin" />;
-      case 'failed':
-        return <XCircleIcon className="h-6 w-6 text-red-600" />;
-      default:
-        return <ClockIcon className="h-6 w-6 text-gray-600" />;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await paymentApi.getPaymentById(id);
+      setPayment(data as unknown as PaymentDetailData);
+    } catch (err: unknown) {
+      const errorMessage = axios.isAxiosError(err)
+        ? err.response?.status === 404
+          ? 'Payment not found for this reference.'
+          : (err.response?.data?.message as string) ||
+            err.message ||
+            'Failed to load payment details. Please try again.'
+        : 'Failed to load payment details. Please try again.';
+
+      setError(errorMessage);
+      toast.error(errorMessage, { autoClose: 3500 });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
+  useEffect(() => {
+    let isMounted = true;
+
+    const initialLoad = async () => {
+      if (!id) {
+        if (isMounted) {
+          setError('Invalid payment reference.');
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const data = await paymentApi.getPaymentById(id);
+        if (isMounted) {
+          setPayment(data as unknown as PaymentDetailData);
+        }
+      } catch (err: unknown) {
+        const errorMessage = axios.isAxiosError(err)
+          ? err.response?.status === 404
+            ? 'Payment not found for this reference.'
+            : (err.response?.data?.message as string) ||
+              err.message ||
+              'Failed to load payment details. Please try again.'
+          : 'Failed to load payment details. Please try again.';
+
+        if (isMounted) {
+          setError(errorMessage);
+        }
+        toast.error(errorMessage, { autoClose: 3500 });
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void initialLoad();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  const statusConfig = useMemo(() => {
+    const normalizedStatus = payment?.status?.toUpperCase() || 'UNKNOWN';
+
+    switch (normalizedStatus) {
+      case 'SUCCESS':
+      case 'COMPLETED':
+        return {
+          badgeClass: 'bg-green-100 text-green-800',
+          icon: <CheckCircleIcon className="h-5 w-5 text-green-600" />,
+        };
+      case 'FAILED':
+        return {
+          badgeClass: 'bg-red-100 text-red-800',
+          icon: <XCircleIcon className="h-5 w-5 text-red-600" />,
+        };
+      case 'PROCESSING':
+      case 'PENDING':
+        return {
+          badgeClass: 'bg-blue-100 text-blue-800',
+          icon: <ClockIcon className="h-5 w-5 text-blue-600" />,
+        };
       default:
-        return 'bg-gray-100 text-gray-800';
+        return {
+          badgeClass: 'bg-gray-100 text-gray-800',
+          icon: <ClockIcon className="h-5 w-5 text-gray-600" />,
+        };
     }
-  };
+  }, [payment?.status]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Link
+          to="/payments"
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          Back to Payments
+        </Link>
+        <LoadingState
+          title="Loading payment details"
+          message="We are fetching the latest transaction information for this reference."
+          fullHeight
+        />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Link
+          to="/payments"
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          Back to Payments
+        </Link>
+        <ErrorState title="Unable to load payment details" message={error} onAction={loadPayment} />
+      </div>
+    );
+  }
+
+  if (!payment) {
+    return (
+      <div className="space-y-6">
+        <Link
+          to="/payments"
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          Back to Payments
+        </Link>
+        <ErrorState
+          title="Payment unavailable"
+          message="No payment details were returned for this reference."
+          onAction={loadPayment}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
       <Link
         to="/payments"
         className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
@@ -106,204 +198,112 @@ const PaymentDetails = () => {
         Back to Payments
       </Link>
 
-      {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-gray-900">{payment.id}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+              {payment.paymentReference}
+            </h1>
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${getStatusColor(
-                payment.status
-              )}`}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${statusConfig.badgeClass}`}
             >
-              {getStatusIcon(payment.status)}
-              {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+              {statusConfig.icon}
+              {payment.status}
             </span>
           </div>
           <p className="mt-1 text-sm text-gray-500">
-            Created on {payment.transaction.createdAt}
+            Created {payment.createdAt ? formatDate(payment.createdAt, true) : 'N/A'}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-500">Total Amount</p>
-          <p className="text-3xl font-bold text-gray-900">{payment.amount}</p>
+        <div className="rounded-lg bg-gray-100 px-4 py-3 sm:text-right">
+          <p className="text-xs text-gray-500">Amount</p>
+          <p className="text-xl font-bold text-gray-900 sm:text-2xl">
+            {formatCurrency(payment.amount, payment.currency)}
+          </p>
         </div>
       </div>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Column - Details */}
         <div className="space-y-6 lg:col-span-2">
-          {/* Transaction Details */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Transaction Details
-            </h2>
-            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="text-lg font-semibold text-gray-900">Transaction Summary</h2>
+            <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-sm font-medium text-gray-500">Transaction ID</dt>
-                <dd className="mt-1 text-sm text-gray-900 font-mono">
-                  {payment.transaction.transactionId}
+                <dt className="text-sm font-medium text-gray-500">Payment Reference</dt>
+                <dd className="mt-1 break-all text-sm font-semibold text-gray-900">
+                  {payment.paymentReference}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Gateway</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {payment.transaction.gateway}
-                </dd>
+                <dt className="text-sm font-medium text-gray-500">Current Status</dt>
+                <dd className="mt-1 text-sm text-gray-900">{payment.status}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Processing Time</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {payment.transaction.processingTime}
-                </dd>
+                <dt className="text-sm font-medium text-gray-500">Customer ID</dt>
+                <dd className="mt-1 text-sm text-gray-900">{payment.customerId}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Completed At</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {payment.transaction.completedAt}
-                </dd>
+                <dt className="text-sm font-medium text-gray-500">Merchant ID</dt>
+                <dd className="mt-1 text-sm text-gray-900">{payment.merchantId}</dd>
               </div>
             </dl>
           </div>
 
-          {/* Customer Details */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Customer Information
-            </h2>
-            <dl className="space-y-4">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Name</dt>
-                <dd className="mt-1 text-sm text-gray-900">{payment.customer.name}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Email</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {payment.customer.email}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Phone</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {payment.customer.phone}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Address</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {payment.customer.address}
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          {/* Payment Method */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Payment Method
-            </h2>
-            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Type</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {payment.paymentMethod.type}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Brand</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {payment.paymentMethod.brand}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Card Number</dt>
-                <dd className="mt-1 text-sm text-gray-900 font-mono">
-                  **** **** **** {payment.paymentMethod.last4}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Expiry</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {payment.paymentMethod.expiry}
-                </dd>
-              </div>
-            </dl>
-          </div>
+          {payment.failureReason ? (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-5 sm:p-6">
+              <h2 className="text-base font-semibold text-red-900">Failure Reason</h2>
+              <p className="mt-2 text-sm text-red-700">{payment.failureReason}</p>
+            </div>
+          ) : null}
         </div>
 
-        {/* Right Column - Timeline and Billing */}
         <div className="space-y-6">
-          {/* Billing Breakdown */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Billing Breakdown
-            </h2>
-            <dl className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <dt className="text-gray-500">Subtotal</dt>
-                <dd className="font-medium text-gray-900">{payment.billing.subtotal}</dd>
+          <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="text-lg font-semibold text-gray-900">Timeline</h2>
+            <div className="mt-4 space-y-3">
+              <div className="rounded-lg bg-gray-50 p-3">
+                <p className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                  <CalendarIcon className="h-4 w-4 text-gray-500" />
+                  Created
+                </p>
+                <p className="mt-1 text-xs text-gray-600">
+                  {payment.createdAt ? formatDate(payment.createdAt, true) : 'Unavailable'}
+                </p>
               </div>
-              <div className="flex justify-between text-sm">
-                <dt className="text-gray-500">Tax</dt>
-                <dd className="font-medium text-gray-900">{payment.billing.tax}</dd>
+              <div className="rounded-lg bg-gray-50 p-3">
+                <p className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                  <ClockIcon className="h-4 w-4 text-gray-500" />
+                  Last Updated
+                </p>
+                <p className="mt-1 text-xs text-gray-600">
+                  {payment.updatedAt ? formatDate(payment.updatedAt, true) : 'Unavailable'}
+                </p>
               </div>
-              <div className="flex justify-between text-sm">
-                <dt className="text-gray-500">Processing Fee</dt>
-                <dd className="font-medium text-gray-900">
-                  {payment.billing.processingFee}
-                </dd>
+              <div className="rounded-lg bg-gray-50 p-3">
+                <p className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                  <CreditCardIcon className="h-4 w-4 text-gray-500" />
+                  Currency
+                </p>
+                <p className="mt-1 text-xs text-gray-600">{payment.currency}</p>
               </div>
-              <div className="flex justify-between border-t border-gray-200 pt-3 text-base">
-                <dt className="font-semibold text-gray-900">Total</dt>
-                <dd className="font-bold text-gray-900">{payment.billing.total}</dd>
-              </div>
-            </dl>
-          </div>
-
-          {/* Timeline */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Payment Timeline
-            </h2>
-            <div className="space-y-4">
-              {payment.timeline.map((event, index) => (
-                <div key={index} className="relative">
-                  {index !== payment.timeline.length - 1 && (
-                    <div className="absolute left-2 top-6 h-full w-0.5 bg-gray-200" />
-                  )}
-                  <div className="flex gap-3">
-                    <div className="relative z-10 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 mt-1">
-                      <div className="h-2 w-2 rounded-full bg-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        {event.status}
-                      </p>
-                      <p className="text-xs text-gray-500">{event.timestamp}</p>
-                      <p className="mt-1 text-xs text-gray-600">
-                        {event.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Actions</h2>
-            <div className="space-y-2">
-              <button className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Refund Payment
-              </button>
-              <button className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Download Receipt
-              </button>
-              <button className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Email Customer
-              </button>
+          <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="text-lg font-semibold text-gray-900">Actions</h2>
+            <div className="mt-4 space-y-2">
+              <Link
+                to="/payments"
+                className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Back to list
+              </Link>
+              <Link
+                to="/payment-search"
+                className="block w-full rounded-lg border border-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-blue-600 hover:bg-blue-50"
+              >
+                Search another payment
+              </Link>
             </div>
           </div>
         </div>
