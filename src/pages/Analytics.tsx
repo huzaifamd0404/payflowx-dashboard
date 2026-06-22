@@ -279,8 +279,8 @@ const Analytics = () => {
                   outerRadius={100}
                   paddingAngle={3}
                   dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
+                  label={({ name, percent }: { name?: string; percent?: number }) =>
+                    `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`
                   }
                   labelLine={false}
                 >
@@ -288,7 +288,7 @@ const Analytics = () => {
                     <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [value, 'Payments']} />
+                <Tooltip formatter={(value: unknown) => [Number(value ?? 0), 'Payments']} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
@@ -309,7 +309,7 @@ const Analytics = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} />
               <YAxis domain={[0, 100]} unit="%" tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(v: number) => [`${v}%`, 'Success Rate']} />
+              <Tooltip formatter={(v: unknown) => [`${Number(v ?? 0)}%`, 'Success Rate']} />
               <Line
                 type="monotone"
                 dataKey="rate"
@@ -335,7 +335,7 @@ const Analytics = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 12 }} />
                 <YAxis dataKey="currency" type="category" tick={{ fontSize: 12 }} width={40} />
-                <Tooltip formatter={(v: number) => [formatCurrency(v), 'Revenue']} />
+                <Tooltip formatter={(v: unknown) => [formatCurrency(Number(v ?? 0)), 'Revenue']} />
                 <Bar dataKey="amount" fill="#3b82f6" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
