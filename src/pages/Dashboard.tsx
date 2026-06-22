@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 import {
   ArrowTrendingUpIcon,
@@ -8,116 +9,96 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
+import { paymentApi } from '../services/api';
+import type { PaymentListItem } from '../types';
+import { formatCurrency, formatDate, getStatusColor } from '../utils/helpers';
 import ErrorState from '../components/ui/ErrorState';
 import EmptyState from '../components/ui/EmptyState';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [payments, setPayments] = useState<PaymentListItem[]>([]);
+
+  const loadDashboard = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await paymentApi.getPayments();
+      setPayments(data);
+    } catch (err: unknown) {
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data?.message as string) || err.message || 'Failed to load dashboard data.'
+        : 'Failed to load dashboard data.';
+      setError(message);
+      toast.error(message, { autoClose: 3000 });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      try {
-        setLoading(false);
-        toast.success('Dashboard loaded successfully!', { autoClose: 2000 });
-      } catch {
-        setError('Failed to load dashboard data');
-        toast.error('Failed to load dashboard data', { autoClose: 3000 });
-        setLoading(false);
-      }
-    }, 1000);
+    let isMounted = true;
 
-    return () => {
-      window.clearTimeout(timeoutId);
+    const initialLoad = async () => {
+      try {
+        const data = await paymentApi.getPayments();
+        if (isMounted) setPayments(data);
+      } catch (err: unknown) {
+        const message = axios.isAxiosError(err)
+          ? (err.response?.data?.message as string) || err.message || 'Failed to load dashboard data.'
+          : 'Failed to load dashboard data.';
+        if (isMounted) setError(message);
+        toast.error(message, { autoClose: 3000 });
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     };
+
+    void initialLoad();
+    return () => { isMounted = false; };
   }, []);
+
+  const successPayments = payments.filter((p) => p.status === 'SUCCESS');
+  const failedPayments  = payments.filter((p) => p.status === 'FAILED');
+  const pendingPayments = payments.filter((p) => p.status === 'PROCESSING' || p.status === 'RETRYING');
+  const totalRevenue    = successPayments.reduce((acc, p) => acc + p.amount, 0);
 
   const stats = [
     {
       name: 'Total Revenue',
-      value: '$145,231',
-      change: '+12.5%',
-      trend: 'up',
+      value: formatCurrency(totalRevenue),
       icon: CreditCardIcon,
+      trend: 'up' as const,
     },
     {
       name: 'Successful Payments',
-      value: '1,234',
-      change: '+8.2%',
-      trend: 'up',
+      value: successPayments.length.toLocaleString(),
       icon: CheckCircleIcon,
+      trend: 'up' as const,
     },
     {
       name: 'Pending Transactions',
-      value: '23',
-      change: '-4.3%',
-      trend: 'down',
+      value: pendingPayments.length.toLocaleString(),
       icon: ClockIcon,
+      trend: 'down' as const,
     },
     {
       name: 'Failed Payments',
-      value: '12',
-      change: '-15.1%',
-      trend: 'down',
+      value: failedPayments.length.toLocaleString(),
       icon: XCircleIcon,
+      trend: 'down' as const,
     },
   ];
 
-  const recentTransactions = [
-    {
-      id: 'TXN-001',
-      customer: 'John Doe',
-      amount: '$1,234.00',
-      status: 'completed',
-      time: '2 mins ago',
-    },
-    {
-      id: 'TXN-002',
-      customer: 'Jane Smith',
-      amount: '$567.00',
-      status: 'completed',
-      time: '5 mins ago',
-    },
-    {
-      id: 'TXN-003',
-      customer: 'Bob Johnson',
-      amount: '$890.00',
-      status: 'pending',
-      time: '12 mins ago',
-    },
-    {
-      id: 'TXN-004',
-      customer: 'Alice Brown',
-      amount: '$2,345.00',
-      status: 'completed',
-      time: '18 mins ago',
-    },
-    {
-      id: 'TXN-005',
-      customer: 'Charlie Wilson',
-      amount: '$456.00',
-      status: 'failed',
-      time: '25 mins ago',
-    },
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const recentTransactions = [...payments]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
 
   if (error) {
     return (
       <div className="space-y-6">
-        <ErrorState title="Error Loading Dashboard" message={error} onAction={() => window.location.reload()} />
+        <ErrorState title="Error Loading Dashboard" message={error} onAction={loadDashboard} />
       </div>
     );
   }
@@ -175,7 +156,6 @@ const Dashboard = () => {
                 ) : (
                   <ArrowTrendingDownIcon className="h-4 w-4" />
                 )}
-                {stat.change}
               </div>
             </div>
             <div className="mt-4">
@@ -199,10 +179,10 @@ const Dashboard = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Transaction ID
+                  Reference
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Customer
+                  Customer ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Amount
@@ -211,12 +191,22 @@ const Dashboard = () => {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Time
+                  Date
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {recentTransactions.length === 0 ? (
+              {loading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4"><div className="h-4 w-32 rounded bg-gray-200"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-24 rounded bg-gray-200"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-20 rounded bg-gray-200"></div></td>
+                    <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-gray-200"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-24 rounded bg-gray-200"></div></td>
+                  </tr>
+                ))
+              ) : recentTransactions.length === 0 ? (
                 <tr>
                   <td className="px-6 py-12 text-center" colSpan={5}>
                     <EmptyState
@@ -228,15 +218,15 @@ const Dashboard = () => {
                 </tr>
               ) : (
                 recentTransactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-gray-50">
+                <tr key={transaction.paymentReference} className="hover:bg-gray-50">
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                    {transaction.id}
+                    {transaction.paymentReference}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                    {transaction.customer}
+                    {transaction.customerId}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-900">
-                    {transaction.amount}
+                    {formatCurrency(transaction.amount, transaction.currency)}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm">
                     <span
@@ -248,7 +238,7 @@ const Dashboard = () => {
                     </span>
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {transaction.time}
+                    {formatDate(transaction.createdAt)}
                   </td>
                 </tr>
               ))

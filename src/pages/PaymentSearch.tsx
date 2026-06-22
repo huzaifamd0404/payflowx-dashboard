@@ -11,6 +11,7 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { paymentApi } from '../services/api';
+import { getStatusColor } from '../utils/helpers';
 import EmptyState from '../components/ui/EmptyState';
 
 interface PaymentData {
@@ -46,22 +47,6 @@ const PaymentSearch = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completed':
-      case 'success':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -77,7 +62,7 @@ const PaymentSearch = () => {
     setPaymentData(null);
 
     try {
-      const result = await paymentApi.getPaymentByReference(searchQuery.trim());
+      const result = await paymentApi.getPaymentById(searchQuery.trim());
       setPaymentData(result as PaymentData);
       toast.success('Payment found successfully!', { autoClose: 3000 });
     } catch (err: unknown) {

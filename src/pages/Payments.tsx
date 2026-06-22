@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { paymentApi } from '../services/api';
 import type { PaymentListItem, PaymentStatus } from '../types';
-import { formatCurrency, formatDate } from '../utils/helpers';
+import { formatCurrency, formatDate, getStatusColor } from '../utils/helpers';
 import ErrorState from '../components/ui/ErrorState';
 import EmptyState from '../components/ui/EmptyState';
 
@@ -108,21 +108,6 @@ const Payments = () => {
       return matchesStatus && matchesQuery;
     });
   }, [filterStatus, payments, searchQuery]);
-
-  const getStatusColor = (status: PaymentStatus) => {
-    switch (status) {
-      case 'SUCCESS':
-        return 'bg-green-100 text-green-800';
-      case 'FAILED':
-        return 'bg-red-100 text-red-800';
-      case 'PROCESSING':
-        return 'bg-blue-100 text-blue-800';
-      case 'RETRYING':
-        return 'bg-amber-100 text-amber-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const hasFilters = filterStatus !== 'all' || searchQuery.trim().length > 0;
 

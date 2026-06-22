@@ -63,6 +63,28 @@ export const getRelativeTime = (date: Date | string): string => {
 };
 
 /**
+ * Get Tailwind badge classes for a payment status string.
+ * Handles both API values (SUCCESS, FAILED, PROCESSING, RETRYING)
+ * and legacy lowercase values (completed, pending, failed, success).
+ */
+export const getStatusColor = (status: string): string => {
+  switch (status.toUpperCase()) {
+    case 'SUCCESS':
+    case 'COMPLETED':
+      return 'bg-green-100 text-green-800';
+    case 'FAILED':
+      return 'bg-red-100 text-red-800';
+    case 'PROCESSING':
+    case 'PENDING':
+      return 'bg-blue-100 text-blue-800';
+    case 'RETRYING':
+      return 'bg-amber-100 text-amber-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+/**
  * Truncate text to specified length
  * @param text - Text to truncate
  * @param maxLength - Maximum length

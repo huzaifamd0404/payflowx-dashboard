@@ -63,47 +63,7 @@ const PaymentDetails = () => {
   };
 
   useEffect(() => {
-    let isMounted = true;
-
-    const initialLoad = async () => {
-      if (!id) {
-        if (isMounted) {
-          setError('Invalid payment reference.');
-          setLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const data = await paymentApi.getPaymentById(id);
-        if (isMounted) {
-          setPayment(data as unknown as PaymentDetailData);
-        }
-      } catch (err: unknown) {
-        const errorMessage = axios.isAxiosError(err)
-          ? err.response?.status === 404
-            ? 'Payment not found for this reference.'
-            : (err.response?.data?.message as string) ||
-              err.message ||
-              'Failed to load payment details. Please try again.'
-          : 'Failed to load payment details. Please try again.';
-
-        if (isMounted) {
-          setError(errorMessage);
-        }
-        toast.error(errorMessage, { autoClose: 3500 });
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void initialLoad();
-
-    return () => {
-      isMounted = false;
-    };
+    void loadPayment();
   }, [id]);
 
   const statusConfig = useMemo(() => {

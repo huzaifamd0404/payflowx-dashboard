@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Layout from './components/Layout';
@@ -7,6 +7,7 @@ import Payments from './pages/Payments';
 import PaymentDetails from './pages/PaymentDetails';
 import CreatePayment from './pages/CreatePayment';
 import PaymentSearch from './pages/PaymentSearch';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
             <Route path="payments/:id" element={<PaymentDetails />} />
             <Route path="create-payment" element={<CreatePayment />} />
             <Route path="payment-search" element={<PaymentSearch />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </Router>

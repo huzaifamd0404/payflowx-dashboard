@@ -69,12 +69,6 @@ export const paymentApi = {
     return data;
   },
 
-  // Get payment by reference
-  getPaymentByReference: async (reference: string): Promise<PaymentSearchResponse> => {
-    const { data } = await apiClient.get(`/payments/${reference}`);
-    return data;
-  },
-
   // Create new payment
   createPayment: async (
     paymentData: CreatePaymentRequest
