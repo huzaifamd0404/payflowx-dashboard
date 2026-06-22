@@ -7,6 +7,7 @@ import Payments from './pages/Payments';
 import PaymentDetails from './pages/PaymentDetails';
 import CreatePayment from './pages/CreatePayment';
 import PaymentSearch from './pages/PaymentSearch';
+import Analytics from './pages/Analytics';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
             <Route path="payments/:id" element={<PaymentDetails />} />
             <Route path="create-payment" element={<CreatePayment />} />
             <Route path="payment-search" element={<PaymentSearch />} />
+            <Route path="analytics" element={<Analytics />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
