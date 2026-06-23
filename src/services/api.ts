@@ -6,6 +6,11 @@ import type {
   PaymentListItem,
   PaymentSearchResponse,
 } from '../types';
+import { getMockPayments, addMockPayment, MOCK_PAYMENT_DETAIL } from './mockData';
+
+// Returns true when the error is a pure connectivity failure (no backend running).
+const isNetworkError = (err: unknown) =>
+  axios.isAxiosError(err) && !err.response;
 
 // API Base URL - update this when backend is ready
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
@@ -55,26 +60,60 @@ export const paymentApi = {
     page?: number;
     limit?: number;
   }): Promise<PaymentListItem[]> => {
-    const { data } = await apiClient.get('/payments', { params: filters });
-    if (Array.isArray(data)) {
-      return data;
+    try {
+      const { data } = await apiClient.get('/payments', { params: filters });
+      if (Array.isArray(data)) return data;
+      return data?.data || data?.items || [];
+    } catch (err) {
+      if (isNetworkError(err)) return getMockPayments();
+      throw err;
     }
-
-    return data?.data || data?.items || [];
   },
 
   // Get payment by ID
   getPaymentById: async (id: string): Promise<PaymentSearchResponse> => {
-    const { data } = await apiClient.get(`/payments/${id}`);
-    return data;
+    try {
+      const { data } = await apiClient.get(`/payments/${id}`);
+      return data;
+    } catch (err) {
+      if (isNetworkError(err)) {
+        return getMockPayments().find((p) => p.paymentReference === id) ?? MOCK_PAYMENT_DETAIL;
+      }
+      throw err;
+    }
   },
 
   // Create new payment
   createPayment: async (
     paymentData: CreatePaymentRequest
   ): Promise<CreatePaymentResponse> => {
-    const { data } = await apiClient.post('/payments', paymentData);
-    return data;
+    try {
+      const { data } = await apiClient.post('/payments', paymentData);
+      return data;
+    } catch (err) {
+      if (isNetworkError(err)) {
+        const newPayment: CreatePaymentResponse = {
+          paymentReference: `PAY-${Date.now()}`,
+          status: 'PROCESSING',
+          customerId: paymentData.customerId,
+          merchantId: paymentData.merchantId,
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+        };
+        // Add to the in-memory store so getPayments() returns it
+        addMockPayment({
+          paymentReference: newPayment.paymentReference,
+          customerId: newPayment.customerId,
+          merchantId: newPayment.merchantId,
+          amount: newPayment.amount,
+          currency: newPayment.currency,
+          status: 'PROCESSING',
+          createdAt: new Date().toISOString(),
+        });
+        return newPayment;
+      }
+      throw err;
+    }
   },
 
   // Update payment status
